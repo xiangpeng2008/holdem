@@ -1,4 +1,5 @@
 cards:"A23456789XJQK";
+
 last_id:();
 onTableId2index:()!();
 nb_people:0;
