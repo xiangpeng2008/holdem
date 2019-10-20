@@ -9,7 +9,7 @@ from qpython import qconnection
 import pandas as pd
 import numpy as np
 
-q = qconnection.QConnection(host = 'localhost', port = 7778, pandas = True)
+q = qconnection.QConnection(host = 'localhost', port = 7780, pandas = True)
 q.open()
 
 app = dash.Dash(
@@ -33,10 +33,24 @@ url_bar_and_content_div = html.Div([
 
 holdem_form = html.Div( [
     html.Div([
-        html.Button(id='newGame',  n_clicks=0, children='newGame',  className='button', style={'fontSize': fontSize}),
-        html.Button(id='newCards', n_clicks=0, children='newCards', className='button', style={'fontSize': fontSize}),
-        html.Button(id='myCards',  n_clicks=0, children='myCards',  className='button', style={'fontSize': fontSize}),
-        ,]),
+        dcc.Dropdown(
+            id='input_option',
+            options=[
+                {'label': 'cards', 'value': 'cards[`]'},
+                {'label': 'pass', 'value': 'pass[`]'},
+                {'label': 'fold', 'value': 'fold[`]'},
+                {'label': 'new game', 'value': 'newGame[`]'},
+                {'label': 'show people on this table', 'value': 'people_on_table`'},#玩家们
+                {'label': 'join', 'value': 'join`'},#加入
+                {'label': 'set number of people *', 'value': 'set_nb_people'},#设定游戏人数 
+                ],
+            value='',
+            style={'fontSize': fontSize},
+            className='fullScreen',
+            ),
+        dcc.Input(id='input_cmd', type='text', placeholder='Enter your text here.',value='', debounce=True, className='input_cmd', style={'fontSize': fontSize},),
+        html.Button(id='submit_button', n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
+        ]),
     html.Div(id='cache_history', style={'display': 'none'}, children="[\"Interaction history\"]"),
     html.Div(id='history'),
     ])
@@ -77,41 +91,36 @@ def serve_layout():
     return html.Div([
         url_bar_and_content_div,
         holdem_form,
-    ])
+        ])
 
 app.layout = serve_layout
 
 # Index callbacks
 @app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
+        [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == "/holdem":
         return holdem_form
     elif pathname == "/login":
         return login_form
 
-@app.callback(
-        [ Output('cache_history', 'children'), Output('input_option', 'value'),Output('input_cmd', 'value'), ], 
-        [Input('submit_button','n_clicks')],
-        [
-            State('input_option', 'value'),
-            State('input_cmd', 'value'),
-            State('cache_history', 'children')]
-        )
-def update_output_div(click, input_opt, input_cmd, existe_value):
+def getQuery(command, existe_value, isPoker = False):
     session_cookie = flask.request.cookies.get('custom_auth_session')
     if not session_cookie:
-        return json.dumps(['not logged in, please go to click [ivoryhuo.com/login](http://ivoryhuo.com/login) to login']),'',''
-        # return ['not logged in, please go to click [127.0.0.1:8050/login](http://127.0.0.1:8050/login) to login'],'',''
+        return json.dumps(['not logged in, please go to click [ivoryhuo.com/login](http://ivoryhuo.com/login) to login'])
+    # return ['not logged in, please go to click [127.0.0.1:8050/login](http://127.0.0.1:8050/login) to login'],'',''
     print(session_cookie)
-    if not input_opt:
-        return existe_value,'',''
-    command='python["'+session_cookie+'";"'+input_opt+('[\\"'+input_cmd.replace(" ", "")+'\\"]' if input_cmd else '')+'"]'
-    print('command: '+command)
-    qres=q.sendSync(command)
-    print("qres is ")
-    print(qres)
-    if isinstance(qres, pd.core.frame.DataFrame):
+    pythonCommand = 'python["'+session_cookie+'";"'+command+'"]'
+    print('python command: '+pythonCommand)
+    qres=q.sendSync(pythonCommand)
+    print(qres[0])
+    print(type(qres[0]))
+    if isPoker:
+        # qres='<span style="color:blue">some *This is Blue italic.* text</span>'
+        qres='# 🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞'
+        # qres="```**This is Blue italic.** ```"
+        # qres="**This is Blue italic.** "
+    elif isinstance(qres, pd.core.frame.DataFrame):
         str_df = qres.select_dtypes([np.object])
         str_df = str_df.stack().str.decode('utf-8').unstack()
         for col in str_df:
@@ -122,7 +131,25 @@ def update_output_div(click, input_opt, input_cmd, existe_value):
     else:
         qres=qres.decode('UTF-8')
     res=json.loads(existe_value)
-    return [json.dumps((["*"+input_opt+" "+input_cmd+"*","```bash\n"+qres+"\n```"]+res)),'','']
+    print("qres is")
+    print(qres)
+    return json.dumps(["*"+command+"*","\n"+qres+"\n"]+res)
+    # return json.dumps(["*"+command+"*","```\n"+qres+"\n```"]+res)
+
+@app.callback(
+        [ Output('cache_history', 'children'), Output('input_option', 'value'),Output('input_cmd', 'value') ], 
+        [ Input('submit_button','n_clicks')],
+        [
+            State('input_option', 'value'),
+            State('input_cmd', 'value'),
+            State('cache_history', 'children')
+            ]
+        )
+def update_output_div(click, input_opt, input_cmd, existe_value):
+    if not input_opt:
+        return [existe_value,'','']
+    query = getQuery(input_opt+('[\\"'+input_cmd.replace(" ", "")+'\\"]' if input_cmd else ''), existe_value, input_opt=='cards[`]')
+    return query,'',''
 
 @app.callback(
         Output('history', 'children'), 

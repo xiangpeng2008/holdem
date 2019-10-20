@@ -1,10 +1,24 @@
-cards:"A23456789XJQK";
+system "p 7780";
+cards52:"🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂬🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂼🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃌🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃜🃝🃞";
+cards52
+cards52[til 10]
+cards52[10+til 10]
+cards52[20+til 10]
+cards52[10+til 10]
+224%52
+count cards52
+cards52 0
+cards52 52
+cards52 1
 
 last_id:();
 onTableId2index:()!();
 nb_people:0;
+cards_this_game:();
 
 passed_this_round:();
+folded_this_round:();
+
 which_round:1;
 records:();
 gameOn:0b;
@@ -12,24 +26,20 @@ gameOn:0b;
 set_nb_people:{[nb] 
   nb_people:"J"$nb;
   `gameOn set 0b;
-  $[nb_people within (2 10); 
+  $[nb_people within (1 10); 
     [ `onTableId2index set ()!();
       :"we are a ",(string nb_people)," people game. \nPlease ask others to join, and start a new game after everyone join";];
-    :"please enter of number between 2 and 10"];
-  };
-
-progress:{
-  $[0;:records;:(string last_id),", only ",(string )," of ",(string records[which_round;`tasks])," people voted this round, please wait them to finish! "];
+    :"please enter of number between 1 and 10"];
   };
 
 newgame:{ 
   if[gameOn;
     :"game is not finished, please don't start a new one now !";];
-  `cards_this_game set ((nb_people#2),(3 1 1)) _ (neg 5+2*nb_people)?til 52;
+  `cards_this_game set (sums 0, (nb_people#2),(3 1)) _ (neg 5+2*nb_people)?til 52;
   `which_round set 1;
   `gameOn set 1b;
   `passed_this_round set ();
-  :"game restarted, please ask people to see their profiles";
+  :"game restarted, please ask people to see their cards";
   };
 
 python:{[id;command] 
@@ -47,24 +57,49 @@ join:{
 
 people_on_table:{ :string key onTableId2index; };
 
-myCards:{ :cards_this_game[onTableId2index[last_id],nb_people+til which_round-1]; };
+fold:{[]
+  if[last_id in folded_this_round;
+    :(string last_id),", you already folded !";
+    ];
+  `folded_this_round set folded_this_round,last_id;
+  `passed_this_round set distinct passed_this_round,last_id;
+  }
 
-vote:{
-  if[not gameOn;:(string last_id),", you can vote anymore, game is already over!"];
+cards:{ :cards_this_game[onTableId2index[last_id],nb_people+til which_round-1]; };
+
+reset_passed_this_round:{[] `passed_this_round set folded_this_round; };
+
+pass:{
+  if[not gameOn;:(string last_id),", there's no card to be shown!"];
+  if[last_id in folded_this_round;
+    :(string last_id),", you already folded !";
+    ];
   if[last_id in passed_this_round;
-    :(string last_id),", you already voted once this round, please don't vote twice !";
+    :(string last_id),", you already passed !";
     ];
   `passed_this_round set passed_this_round,last_id;
-  s_f_nb:(`success`fail!`succN`failN)[x];
-  records[which_round;s_f_nb]:records[which_round;s_f_nb]+1;
-  if[>=records[which_round;];
-    records[which_round;`stat]:`$$[records[which_round;`failN]>=records[which_round;`barrer];[`failRdNbs set failRdNbs+1;"✗"];"✓"];
+  if[nb_people=count passed_this_round;
     `which_round set which_round+1;
-    `passed_this_round set ();
-    if[failRdNbs=3;
-      `gameOn set 0b;
-      :"Well done ! ",(string last_id)," Evil won !";];
+    reset_passed_this_round`;
     ];
-  :(string last_id),", your vote is well registred !";
+  :(string last_id),", you passed !";
   }
+
+nb_people:3
+
+python["a";"join`"] 
+python["b";"join`"] 
+python["c";"join`"] 
+
+python["a";"cards`"] 
+python["b";"cards`"] 
+python["c";"cards`"] 
+
+python["a";"pass`"] 
+python["b";"pass`"] 
+python["c";"pass`"] 
+
+
+python["c";"fold`"] 
+python["c";"newgame`"] 
 
