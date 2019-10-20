@@ -94,7 +94,8 @@ def serve_layout():
         ])
 
 app.layout = serve_layout
-
+# cards52 = np.array("🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞")
+cards52 = "🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞"
 # Index callbacks
 @app.callback(Output('page-content', 'children'),
         [Input('url', 'pathname')])
@@ -114,10 +115,16 @@ def getQuery(command, existe_value, isPoker = False):
     print('python command: '+pythonCommand)
     qres=q.sendSync(pythonCommand)
     print(qres[0])
-    print(type(qres[0]))
+    print((qres[0][0]))
+    print((qres[0][0]))
+    print(type(qres[0][0]))
+    print(cards52)
+    print(cards52[0])
+    print(cards52[(0,1)])
+    print(cards52[qres[0][0]])
     if isPoker:
         # qres='<span style="color:blue">some *This is Blue italic.* text</span>'
-        qres='# 🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞'
+        qres='# '+cards52[qres[0][0]]
         # qres="```**This is Blue italic.** ```"
         # qres="**This is Blue italic.** "
     elif isinstance(qres, pd.core.frame.DataFrame):
