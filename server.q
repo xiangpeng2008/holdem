@@ -1,15 +1,4 @@
 system "p 7780";
-cards52:"🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂬🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂼🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃌🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃜🃝🃞";
-cards52
-cards52[til 10]
-cards52[10+til 10]
-cards52[20+til 10]
-cards52[10+til 10]
-224%52
-count cards52
-cards52 0
-cards52 52
-cards52 1
 
 last_id:();
 onTableId2index:()!();
@@ -24,7 +13,7 @@ records:();
 gameOn:0b;
 
 set_nb_people:{[nb] 
-  nb_people:"J"$nb;
+  `nb_people set "J"$nb;
   `gameOn set 0b;
   $[nb_people within (1 10); 
     [ `onTableId2index set ()!();
@@ -39,6 +28,7 @@ newgame:{
   `which_round set 1;
   `gameOn set 1b;
   `passed_this_round set ();
+  `folded_this_round set ();
   :"game restarted, please ask people to see their cards";
   };
 
@@ -85,6 +75,7 @@ pass:{
   :(string last_id),", you passed !";
   }
 
+/
 nb_people:3
 
 python["a";"join`"] 
@@ -102,4 +93,4 @@ python["c";"pass`"]
 
 python["c";"fold`"] 
 python["c";"newgame`"] 
-
+set_nb_people["1"]

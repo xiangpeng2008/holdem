@@ -94,8 +94,7 @@ def serve_layout():
         ])
 
 app.layout = serve_layout
-# cards52 = np.array("🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞")
-cards52 = "🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞"
+cards52 = np.array(list("🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞"))
 # Index callbacks
 @app.callback(Output('page-content', 'children'),
         [Input('url', 'pathname')])
@@ -114,19 +113,9 @@ def getQuery(command, existe_value, isPoker = False):
     pythonCommand = 'python["'+session_cookie+'";"'+command+'"]'
     print('python command: '+pythonCommand)
     qres=q.sendSync(pythonCommand)
-    print(qres[0])
-    print((qres[0][0]))
-    print((qres[0][0]))
-    print(type(qres[0][0]))
-    print(cards52)
-    print(cards52[0])
-    print(cards52[(0,1)])
-    print(cards52[qres[0][0]])
     if isPoker:
-        # qres='<span style="color:blue">some *This is Blue italic.* text</span>'
-        qres='# '+cards52[qres[0][0]]
-        # qres="```**This is Blue italic.** ```"
-        # qres="**This is Blue italic.** "
+        # qres='\n'.join(['# _'+''.join(cards52[index])+'_' for index in qres])
+        qres='\n'.join(['# '+''.join(cards52[index]) for index in qres])
     elif isinstance(qres, pd.core.frame.DataFrame):
         str_df = qres.select_dtypes([np.object])
         str_df = str_df.stack().str.decode('utf-8').unstack()
@@ -138,10 +127,7 @@ def getQuery(command, existe_value, isPoker = False):
     else:
         qres=qres.decode('UTF-8')
     res=json.loads(existe_value)
-    print("qres is")
-    print(qres)
-    return json.dumps(["*"+command+"*","\n"+qres+"\n"]+res)
-    # return json.dumps(["*"+command+"*","```\n"+qres+"\n```"]+res)
+    return json.dumps(["*"+command+"*","\n"+qres+"\n" if isPoker else "```\n"+qres+"\n```"]+res)
 
 @app.callback(
         [ Output('cache_history', 'children'), Output('input_option', 'value'),Output('input_cmd', 'value') ], 
@@ -164,7 +150,6 @@ def update_output_div(click, input_opt, input_cmd, existe_value):
         )
 def update_output_div(existe_value):
     res = '\n'.join(json.loads(existe_value))
-    print(res)
     return dcc.Markdown(res)
 
 server = app.server
