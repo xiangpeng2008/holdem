@@ -1,7 +1,7 @@
 ﻿.input{padding:6px;width:30%;float:left}
 .fullScreen{padding:6px;width:90%;float:left}
-/*.input_cmd{padding-top:10px;width:50%;float:left;margin-left: 3%}*/
-.input_cmd{padding:10px;width:50%;float:left;margin-left: 3%}
+.input_cmd{padding-top:15px;width:50%;float:left;margin-left: 3%}
+/*.input_cmd{padding:10px;width:50%;float:left;margin-left: 3%}*/
 .button{padding:10px;width:30%;margin-left: 5%}
 .smallButton{padding:10px;width:20%;margin-left: 5%}
 .fullLine{padding:80px;width:100%}
