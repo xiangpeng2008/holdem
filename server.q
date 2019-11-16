@@ -51,8 +51,12 @@ fold:{[]
   if[last_id in folded_this_round;
     :(string last_id),", you already folded !";
     ];
-  `folded_this_round set folded_this_round,last_id;
+  `folded_this_round set distinct folded_this_round,last_id;
   `passed_this_round set distinct passed_this_round,last_id;
+  if[nb_people=count folded_this_round;
+    `which_round set 4;
+    `gameOn set 0b;];
+  :(string last_id),", you folded !";
   }
 
 cards:{ :cards_this_game[onTableId2index[last_id],nb_people+til which_round-1]; };
@@ -70,6 +74,7 @@ pass:{
   `passed_this_round set passed_this_round,last_id;
   if[nb_people=count passed_this_round;
     `which_round set which_round+1;
+    if[which_round=4;`gameOn set 0b;];
     reset_passed_this_round`;
     ];
   :(string last_id),", you passed !";

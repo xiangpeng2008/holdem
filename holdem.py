@@ -50,6 +50,9 @@ holdem_form = html.Div( [
             ),
         dcc.Input(id='input_cmd', type='text', placeholder='Enter your text here.',value='', debounce=True, className='input_cmd', style={'fontSize': fontSize},),
         html.Button(id='submit_button', n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
+        html.Button(id='submit_cards' , n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
+        html.Button(id='submit_pass'  , n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
+        html.Button(id='submit_fold'  , n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
         ]),
     html.Div(id='cache_history', style={'display': 'none'}, children="[\"Interaction history\"]"),
     html.Div(id='history'),
@@ -138,6 +141,21 @@ def getQuery(command, existe_value, isPoker = False):
             State('cache_history', 'children')
             ]
         )
+def update_button(click, input_opt, input_cmd, existe_value):
+    if not input_opt:
+        return [existe_value,'','']
+    query = getQuery(input_opt+('[\\"'+input_cmd.replace(" ", "")+'\\"]' if input_cmd else ''), existe_value, input_opt=='cards[`]')
+    return query,'',''
+
+@app.callback(
+        [ Output('cache_history', 'children'), Output('input_option', 'value'),Output('input_cmd', 'value') ], 
+        [ Input('submit_button','n_clicks')],
+        [
+            State('input_option', 'value'),
+            State('input_cmd', 'value'),
+            State('cache_history', 'children')
+            ]
+        )
 def update_output_div(click, input_opt, input_cmd, existe_value):
     if not input_opt:
         return [existe_value,'','']
@@ -153,3 +171,7 @@ def update_output_div(existe_value):
     return dcc.Markdown(res)
 
 server = app.server
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
