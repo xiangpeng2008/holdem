@@ -49,11 +49,12 @@ holdem_form = html.Div( [
         dcc.Input(id='input_cmd', type='text', placeholder='Enter your text here.',value='', debounce=True, className='input_cmd', style={'fontSize': fontSize},),
         html.Button(id='submit_button', n_clicks_timestamp=0, n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
         html.Br(),
-        html.Button(id='submit_cards' , n_clicks_timestamp=0, n_clicks=0, children='Cards', className='smallButton', style={'fontSize': fontSize}),
+        html.Button(id='submit_cards' , n_clicks=0, children='Cards', className='smallButton', style={'fontSize': fontSize}),
         html.Button(id='submit_pass',   n_clicks_timestamp=0, n_clicks=0, children='Pass',  className='smallButton', style={'fontSize': fontSize}),
         html.Button(id='submit_fold'  , n_clicks_timestamp=0, n_clicks=0, children='Fold',  className='smallButton', style={'fontSize': fontSize}),
         ]),
     html.Div(id='cache_history', style={'display': 'none'}, children="[\"Interaction history\"]"),
+    html.Div(id='cache_cards_click', style={'display': 'none'}, children='0'),
     html.Div(id='history'),
     ])
 
@@ -96,7 +97,9 @@ def serve_layout():
         ])
 
 app.layout = serve_layout
-cards52 = np.array(list("🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞"))
+cards52 = list("🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞")
+cards52Span = [ html.Span(cards52[i], style={'color': ('red' if i<26 else 'black'), 'fontSize': 96}) for i in range(52)]
+
 # Index callbacks
 @app.callback(Output('page-content', 'children'),
         [Input('url', 'pathname')])
@@ -111,12 +114,11 @@ def getQuery(command, existe_value, isPoker = False):
     if not session_cookie:
         return json.dumps(['not logged in, please go to click [ivoryhuo.com/login](http://ivoryhuo.com/login) to login'])
     # return ['not logged in, please go to click [127.0.0.1:8050/login](http://127.0.0.1:8050/login) to login'],'',''
-    print(session_cookie)
     pythonCommand = 'python["'+session_cookie+'";"'+command+'"]'
     print('python command: '+pythonCommand)
     qres=q.sendSync(pythonCommand)
     if isPoker:
-        qres='\n'.join(['# '+''.join(cards52[index]) for index in qres])
+        return [i.tolist() for i in qres]
     elif isinstance(qres, pd.core.frame.DataFrame):
         str_df = qres.select_dtypes([np.object])
         str_df = str_df.stack().str.decode('utf-8').unstack()
@@ -127,20 +129,19 @@ def getQuery(command, existe_value, isPoker = False):
         qres='\n'.join([i.decode('UTF-8') for i in qres])
     else:
         qres=qres.decode('UTF-8')
-    res=json.loads(existe_value)
-    return json.dumps(["*"+command+"*","\n"+qres+"\n" if isPoker else "```\n"+qres+"\n```"]+res)
+    return json.dumps(["*"+command+"*","```\n"+qres+"\n```"]+json.loads(existe_value))
 
 @app.callback(
         [ Output('cache_history', 'children'), Output('input_option', 'value'),Output('input_cmd', 'value') ], 
-        [ Input('submit_button','n_clicks_timestamp'), Input('submit_cards','n_clicks_timestamp'), Input('submit_pass','n_clicks_timestamp'), Input('submit_fold','n_clicks_timestamp'),],
+        [ Input('submit_button','n_clicks_timestamp'), Input('submit_pass','n_clicks_timestamp'), Input('submit_fold','n_clicks_timestamp'),],
         [
             State('input_option', 'value'),
             State('input_cmd', 'value'),
             State('cache_history', 'children')
             ]
         )
-def update_output_div(tSubmit, tCards, tPass, tFold, input_opt, input_cmd, existe_value):
-    tClicks = [tSubmit, tCards, tPass, tFold]
+def update_output_div(tSubmit, tPass, tFold, input_opt, input_cmd, existe_value):
+    tClicks = [tSubmit, tPass, tFold]
     lastClicked = tClicks.index(max(tClicks))
     if (tClicks[lastClicked] == 0) or ((not input_opt) and (lastClicked == 0)):
         return [existe_value,'','']
@@ -148,22 +149,29 @@ def update_output_div(tSubmit, tCards, tPass, tFold, input_opt, input_cmd, exist
     print(tClicks)
     print(lastClicked)
     if lastClicked == 0:
-        query = getQuery(input_opt+('[\\"'+input_cmd.replace(" ", "")+'\\"]' if input_cmd else ''), existe_value, input_opt=='cards[`]')
+        query = getQuery(input_opt+('[\\"'+input_cmd.replace(" ", "")+'\\"]' if input_cmd else ''), existe_value)
     elif lastClicked == 1:
-        query = getQuery('cards[`]', existe_value, True)
-    elif lastClicked == 2:
         query = getQuery('pass[`]', existe_value)
-    elif lastClicked == 3:
+    elif lastClicked == 2:
         query = getQuery('fold[`]', existe_value)
     return query,'',''
 
 @app.callback(
-        Output('history', 'children'), 
-        [Input('cache_history','children')],
+        [Output('history', 'children'), Output('cache_cards_click','children')],
+        [Input('cache_history','children'), Input('submit_cards','n_clicks')],
+        [State('cache_cards_click', 'children')],
         )
-def update_output_div(existe_value):
-    res = '\n'.join(json.loads(existe_value))
-    return dcc.Markdown(res)
+def update_output_div(existe_value, nCard2, prevNCard2):
+    prevNCard2 = json.loads(prevNCard2)
+    history_res = "";
+    if nCard2 > prevNCard2:
+        cardsIndex = getQuery('cards[`]', existe_value, True)
+        print(cardsIndex)
+        res = [html.Div([cards52Span[i] for i in j]) for j in cardsIndex]
+        history_res = html.Div(res)
+    else:
+        history_res = dcc.Markdown('\n'.join(json.loads(existe_value)))
+    return (history_res,json.dumps(nCard2))
 
 server = app.server
 
