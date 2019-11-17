@@ -44,6 +44,7 @@ class Holdem{
   public:
     Holdem(int const roomNb):roomNb(roomNb), cards_this_game(52){
       std::iota(cards_this_game.begin(), cards_this_game.end(), 0);
+      shuffle (cards_this_game.begin(), cards_this_game.end(), rng);
     };
     std::string setNbPeople(int nb){
       std::ostringstream stream;
