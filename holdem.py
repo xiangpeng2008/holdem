@@ -41,7 +41,7 @@ holdem_form = html.Div( [
             options=[
                 {'label': 'new game', 'value': 'newGame`'},
                 {'label': 'show people on this table', 'value': 'people_on_table`'},#玩家们
-                {'label': 'join', 'value': 'join`'},#加入
+                {'label': 'join room *', 'value': 'join`'},#加入
                 {'label': 'set number of people *', 'value': 'set_nb_people'},#设定游戏人数 
                 {'label': 'create room of * people',   'value': 'create_room'    },
                 ],
@@ -84,6 +84,9 @@ def route_login():
     rep.set_cookie('custom_auth_session', username)
     return rep
 
+@app.server.route('/guide')
+def route_guide():
+    return flask.send_from_directory('','guide.html')
 
 # create a logout route
 @app.server.route('/logout', methods=['POST'])
@@ -117,7 +120,7 @@ def display_page(pathname):
 def getQuery(command, existe_value, isPoker = False):
     session_cookie = flask.request.cookies.get('custom_auth_session')
     if not session_cookie:
-        return json.dumps(['not logged in, please go to click [ivoryhuo.com/login](http://ivoryhuo.com/login) to login']),'',''
+        return json.dumps(['not logged in, please go to click [ivoryhuo.com:7778/login](http://ivoryhuo.com:7778/login) to login']),'',''
     command=session_cookie+','+command
     print(command)
     serverCpp.sendall(command.encode('utf-8'))
