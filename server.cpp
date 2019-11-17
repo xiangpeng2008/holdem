@@ -40,12 +40,10 @@ std::vector<std::string> split(const std::string &s, char delim) {
   return elems;
 }
 
-
-//to do n-1 fold can end game
 class Holdem{
   public:
-    Holdem(int const roomNb):roomNb(roomNb){
-      std::iota(cards_this_game.begin(), cards_this_game.end(), 0)
+    Holdem(int const roomNb):roomNb(roomNb), cards_this_game(52){
+      std::iota(cards_this_game.begin(), cards_this_game.end(), 0);
     };
     std::string setNbPeople(int nb){
       std::ostringstream stream;
@@ -74,10 +72,10 @@ class Holdem{
 
     std::string forceNewGame(){
       gameOn = false;
-      return newgame();
+      return newGame();
     }
 
-    std::string newgame(){
+    std::string newGame(){
       std::ostringstream stream;
       if(onTableId2index.size()<nbPeople){
 	stream<<"you need "<<nbPeople<<" people to start the game, while there are only "<<onTableId2index.size()<<" now\n";
@@ -85,14 +83,7 @@ class Holdem{
 	stream<<"game is not finished, please don't start a new one now !\n";
       }else{
 	shuffle (cards_this_game.begin(), cards_this_game.end(), rng);
-	role2id.clear();
-	int idx=0;
-	for (auto const& it : onTableId2index) {
-	  role2id[*(cards_this_game[idx])].push_back(it.first);
-	  ++idx;
-	}
 	which_round = 1;
-	votesNb = 0;
 	gameOn = true;
 	passed_this_round.clear();
 	folded_this_round.clear();
@@ -100,7 +91,8 @@ class Holdem{
       }
       return stream.str();
     }
-    std::string peopleOnTable(){ 
+
+    std::string people_on_table(){ 
       std::ostringstream stream;
       for (auto const& it : onTableId2index) {
 	stream<<it.first<<", ";
@@ -108,111 +100,74 @@ class Holdem{
       stream<<'\n';
       return stream.str();
     }
-    std::string who(std::string usrname){
+
+    std::string fold(std::string usrname){ 
       std::ostringstream stream;
-      if ( onTableId2index.find(usrname) == onTableId2index.end() ) {
-	stream<<usrname<<", you havn't joint yet\n";
+      if(std::find(folded_this_round.begin(), folded_this_round.end(),usrname)!=folded_this_round.end()){
+	stream<<usrname<<", you already folded once, please don't fold twice !\n";
 	return stream.str();
-      } 
-      auto role = *(cards_this_game[onTableId2index[usrname]]);
-      std::vector<std::string> idsYouKnow;
-      for(auto const & it: role.skill){
-	idsYouKnow.insert(idsYouKnow.end(), role2id[*it].begin(), role2id[*it].end());
       }
-      sort (idsYouKnow.begin(), idsYouKnow.end());
-      stream<<usrname<<", you are "<<role<<": "<<role.discription;
-
-      if(role.good){
-	for(auto const & it:idsYouKnow){
-	  stream<<" "<<it;
-	}
-      } else {
-	for(auto const & it:idsYouKnow){
-	  stream<<" "<<it<<":"<<*(cards_this_game[onTableId2index[it]]);
-	}
+      folded_this_round.push_back(usrname);
+      if(not (std::find(passed_this_round.begin(), passed_this_round.end(),usrname)!=passed_this_round.end())){
+	passed_this_round.push_back(usrname);
       }
-      stream<<'\n';
+      if(nbPeople==1+folded_this_round.size()){
+	which_round = 4;
+	gameOn = false;
+      }
+      stream<<usrname<<", you folded !\n";
       return stream.str();
     }
 
-    std::string progress(std::string usrname){ 
-      std::ostringstream stream;
-      if(votesNb==0){
-	loop(5){
-	}
-      }else{
-      }
-      return stream.str();
-    }
-
-    std::string vote(std::string usrname, bool votePass){
+    std::string pass(std::string usrname){
       std::ostringstream stream;
       if(not gameOn){
-	stream<<usrname<<", you can't vote anymore, game is already over\n";
+	stream<<usrname<<", there's no card to be shown !\n";
 	return stream.str();
       }
-      if(std::find(votedThisRound.begin(), votedThisRound.end(),usrname)!=votedThisRound.end()){
-	stream<<usrname<<", you already voted once this round, please don't vote twice !\n";
+      if(std::find(folded_this_round.begin(), folded_this_round.end(),usrname)!=folded_this_round.end()){
+	stream<<usrname<<", you already folded, no need to pass !\n";
 	return stream.str();
       }
-      votedThisRound.push_back(usrname);
-      ++votesNb;
-      (votePass?succN:failN)[which_round]++;
-      if(votesNb>=[which_round]){
-	bool failed = failN[which_round]>=[which_round];
-	failRdNbs=failRdNbs+failed;
-	stats[which_round]=failed?"✗":"✓";
-	which_round++;
-	votesNb=0;
-	votedThisRound.clear();
-	if(failRdNbs==3){
-	  gameOn=false;
-	  stream<<"Well done ! "<<usrname<<" Evil won !\n";
-	  return stream.str();
-	}
+      if(std::find(passed_this_round.begin(), passed_this_round.end(),usrname)!=passed_this_round.end()){
+	stream<<usrname<<", you already passed  once, please don't pass twice !\n";
+	return stream.str();
       }
-      stream<<usrname<<", your vote is well registred !\n";
+      passed_this_round.push_back(usrname);
+      if(nbPeople==passed_this_round.size()){
+	if((++which_round)==4){ gameOn = false; }
+	passed_this_round = folded_this_round;
+      }
+      stream<<usrname<<", you passed !\n";
       return stream.str();
     }
 
-    std::string assassinate(std::string usrname,std::string name){
+    std::string cards(std::string usrname){ 
       std::ostringstream stream;
-      if(not gameOn){
-	stream<<usrname<<", game is already over !\n";
-	return stream.str();
+      if ( onTableId2index.find(usrname) == onTableId2index.end() ) { return stream.str(); }
+      auto index = onTableId2index[usrname];
+      stream << cards_this_game[index*2] << ',' << cards_this_game[index*2+1];
+      if(which_round > 1) {
+	stream << ';' << cards_this_game[51] << ',' << cards_this_game[50] << ',' << cards_this_game[49];
       }
-      auto const & idAssassin = role2id[*AssassinPtr];
-      if(std::find(idAssassin.begin(), idAssassin.end(),usrname)==idAssassin.end()){
-	stream<<usrname<<", you are not Assassin, you assassinate what ??? Let me recall you something:\n"<<who(usrname);
+      if(which_round > 2) {
+	stream << ';' << cards_this_game[48];
       }
-      gameOn =false;
-      if ( onTableId2index.find(name) == onTableId2index.end() ) {
-	stream<<name<<" is not on the table, please verify the name\n";
-	return stream.str();
-      } else {
-	auto const & idMerlin = role2id[*MerlinPtr];
-	if(std::find(idMerlin.begin(), idMerlin.end(),name)==idMerlin.end()){
-	  stream<<"Oh! "<<usrname<<" you assassinated the wrong person ! Good people won !\n";
-	}else{
-	  stream<<"Well done ! "<<usrname<<" you assassinated the right person ! Evil won !\n";
-	}
+      if(which_round > 3) {
+	stream << ';' << cards_this_game[47];
       }
       return stream.str();
     }
+
   private:
     int nbPeople;
     std::map<std::string,int> onTableId2index;
-    std::map<Role,std::vector<std::string>,RoleCompare> role2id;
     bool gameOn = false;
-    std::vector<int> cards_this_game(52);
-    int which_round = 1;
-    int votesNb = 0;
-    int failRdNbs = 0;
     int const roomNb;
-    std::vector<int>  succN;
-    std::vector<int>  failN;
-    std::vector<std::string> stats;
-    std::vector<std::string> votedThisRound;
+    std::vector<int> cards_this_game;
+    int which_round = 1;
+    std::vector<std::string> passed_this_round;
+    std::vector<std::string> folded_this_round;
     decltype(std::default_random_engine()) rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
 };
 
@@ -241,7 +196,7 @@ std::string respondClient(std::string request){
     return create_room(std::stoi(splitedRequest[2]));
   }
   const auto & usrname = splitedRequest[0];
-  if(func=="join"){ 
+  if(func=="join`"){ 
     if(requestSize!=3){error("wrong args");}
     int roomNb=std::stoi(splitedRequest[2]);
     if((roomNb>=rooms.size()) or (roomNb<0) ){
@@ -260,29 +215,25 @@ std::string respondClient(std::string request){
     if(requestSize!=2){error("wrong args");}
     return HoldemInstant.forceNewGame();
   }
-  if(func=="newgame"){ 
+  if(func=="newGame`"){ 
     if(requestSize!=2){error("wrong args");}
-    return HoldemInstant.newgame();
+    return HoldemInstant.newGame();
   }
-  if(func=="peopleOnTable"){ 
+  if(func=="people_on_table`"){ 
     if(requestSize!=2){error("wrong args");}
-    return HoldemInstant.peopleOnTable();
+    return HoldemInstant.people_on_table();
   }
-  if(func=="who"){ 
+  if(func=="cards`"){ 
     if(requestSize!=2){error("wrong args");}
-    return HoldemInstant.who(usrname);
+    return HoldemInstant.cards(usrname);
   }
-  if(func=="progress"){ 
+  if(func=="pass`"){ 
     if(requestSize!=2){error("wrong args");}
-    return HoldemInstant.progress(usrname);
+    return HoldemInstant.pass(usrname);
   }
-  if(func=="vote"){ 
-    if(requestSize!=3){error("wrong args");}
-    return HoldemInstant.vote(usrname,splitedRequest[2]=="true");
-  }
-  if(func=="assassinate"){ 
-    if(requestSize!=3){error("wrong args");}
-    return HoldemInstant.assassinate(usrname,splitedRequest[2]);
+  if(func=="fold`"){ 
+    if(requestSize!=2){error("wrong args");}
+    return HoldemInstant.fold(usrname);
   }
   return "";
 }
