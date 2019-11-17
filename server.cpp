@@ -196,7 +196,7 @@ std::string respondClient(std::string request){
     try {
       return create_room(std::stoi(splitedRequest[2]));
     } catch (const std::invalid_argument& ia) {
-      return "invalid room number";
+      return "invalid number of people";
     }
   }
   const auto & usrname = splitedRequest[0];
