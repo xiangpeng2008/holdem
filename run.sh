@@ -4,6 +4,7 @@ mkdir -p log
 currentTime="`date +%Y%m%d_%H%M%S`"
 kill $(ps aux | grep '7778 holdem' | awk '{print $2}')
 kill $(ps aux | grep 'server.cpp.o 20002' | awk '{print $2}')
+sleep 5
 nohup ~/Documents/Tools/bash/runcpp -c server.cpp 20002 &> log/cpp_$currentTime.txt &
 sleep 3
 source ~/venv37/bin/activate
