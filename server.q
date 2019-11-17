@@ -1,4 +1,4 @@
-system "p 7780";
+//system "p 7779";
 
 last_id:();
 onTableId2index:()!();
