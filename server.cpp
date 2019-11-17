@@ -171,9 +171,10 @@ class Holdem{
     decltype(std::default_random_engine()) rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
 };
 
-void error(const char *msg)
+std::string error(const char *msg)
 {
   perror(msg);
+  return msg;
 }
 
 std::vector<Holdem> rooms;
@@ -191,12 +192,12 @@ std::string respondClient(std::string request){
   std::string func = splitedRequest[1];
   auto requestSize = splitedRequest.size();
   if(func=="create_room"){ 
-    if(requestSize!=3){error("wrong args");}
+    if(requestSize!=3){return error("wrong args");}
     return create_room(std::stoi(splitedRequest[2]));
   }
   const auto & usrname = splitedRequest[0];
   if(func=="join`"){ 
-    if(requestSize!=3){error("wrong args");}
+    if(requestSize!=3){return error("wrong args");}
     int roomNb=std::stoi(splitedRequest[2]);
     if((roomNb>=rooms.size()) or (roomNb<0) ){
       return "Room doesn't exists\n";
@@ -211,27 +212,27 @@ std::string respondClient(std::string request){
   auto& HoldemInstant = rooms[usrRoomNb[usrname]];
 
   if(func=="forceNewGame"){
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.forceNewGame();
   }
   if(func=="newGame`"){ 
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.newGame();
   }
   if(func=="people_on_table`"){ 
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.people_on_table();
   }
   if(func=="cards`"){ 
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.cards(usrname);
   }
   if(func=="pass`"){ 
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.pass(usrname);
   }
   if(func=="fold`"){ 
-    if(requestSize!=2){error("wrong args");}
+    if(requestSize!=2){return error("wrong args");}
     return HoldemInstant.fold(usrname);
   }
   return "";
