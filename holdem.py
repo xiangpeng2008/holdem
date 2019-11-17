@@ -9,7 +9,7 @@ from qpython import qconnection
 import pandas as pd
 import numpy as np
 
-q = qconnection.QConnection(host = 'localhost', port = 7780, pandas = True)
+q = qconnection.QConnection(host = 'localhost', port = 7779, pandas = True)
 q.open()
 
 app = dash.Dash(
@@ -48,6 +48,7 @@ holdem_form = html.Div( [
         html.Br(),
         dcc.Input(id='input_cmd', type='text', placeholder='Enter your text here.',value='', debounce=True, className='input_cmd', style={'fontSize': fontSize},),
         html.Button(id='submit_button', n_clicks_timestamp=0, n_clicks=0, children='Submit', className='button', style={'fontSize': fontSize}),
+        html.Br(),
         html.Br(),
         html.Button(id='submit_cards' , n_clicks=0, children='Cards', className='smallButton', style={'fontSize': fontSize}),
         html.Button(id='submit_pass',   n_clicks_timestamp=0, n_clicks=0, children='Pass',  className='smallButton', style={'fontSize': fontSize}),
@@ -176,4 +177,4 @@ def update_output_div(existe_value, nCard2, prevNCard2):
 server = app.server
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(port=7777, debug=True, host='0.0.0.0')
