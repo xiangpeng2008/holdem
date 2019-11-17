@@ -53,7 +53,7 @@ fold:{[]
     ];
   `folded_this_round set distinct folded_this_round,last_id;
   `passed_this_round set distinct passed_this_round,last_id;
-  if[nb_people=count folded_this_round;
+  if[nb_people=1+count folded_this_round;
     `which_round set 4;
     `gameOn set 0b;];
   :(string last_id),", you folded !";
@@ -80,22 +80,3 @@ pass:{
   :(string last_id),", you passed !";
   }
 
-/
-nb_people:3
-
-python["a";"join`"] 
-python["b";"join`"] 
-python["c";"join`"] 
-
-python["a";"cards`"] 
-python["b";"cards`"] 
-python["c";"cards`"] 
-
-python["a";"pass`"] 
-python["b";"pass`"] 
-python["c";"pass`"] 
-
-
-python["c";"fold`"] 
-python["c";"newgame`"] 
-set_nb_people["1"]
