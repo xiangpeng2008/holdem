@@ -42,7 +42,6 @@ holdem_form = html.Div( [
                 {'label': 'new game', 'value': 'newGame`'},
                 {'label': 'show people on this table', 'value': 'people_on_table`'},#玩家们
                 {'label': 'join room *', 'value': 'join`'},#加入
-                {'label': 'set number of people *', 'value': 'set_nb_people'},#设定游戏人数 
                 {'label': 'create room of * people',   'value': 'create_room'    },
                 ],
             value='',

@@ -4,7 +4,7 @@ mkdir -p log
 currentTime="`date +%Y%m%d_%H%M%S`"
 kill $(ps aux | grep '7778 holdem' | awk '{print $2}')
 kill $(ps aux | grep 'server.cpp.o 20002' | awk '{print $2}')
-nohup ./server.cpp.o 20002 &> log/cpp_$currentTime.txt &
+nohup runcpp -c server.cpp.o 20002 &> log/cpp_$currentTime.txt &
 sleep 3
 source ~/venv37/bin/activate
 nohup gunicorn --bind 0.0.0.0:7778 holdem:server &> log/dash_$currentTime.txt &
