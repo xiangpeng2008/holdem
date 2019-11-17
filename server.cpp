@@ -193,12 +193,21 @@ std::string respondClient(std::string request){
   auto requestSize = splitedRequest.size();
   if(func=="create_room"){ 
     if(requestSize!=3){return error("wrong args");}
-    return create_room(std::stoi(splitedRequest[2]));
+    try {
+      return create_room(std::stoi(splitedRequest[2]));
+    } catch (const std::invalid_argument& ia) {
+      return "invalid room number";
+    }
   }
   const auto & usrname = splitedRequest[0];
   if(func=="join`"){ 
     if(requestSize!=3){return error("wrong args");}
-    int roomNb=std::stoi(splitedRequest[2]);
+    int roomNb;
+    try {
+      roomNb=std::stoi(splitedRequest[2]);
+    } catch (const std::invalid_argument& ia) {
+      return "invalid room number";
+    }
     if((roomNb>=rooms.size()) or (roomNb<0) ){
       return "Room doesn't exists\n";
     }
