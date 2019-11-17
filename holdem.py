@@ -87,6 +87,10 @@ def route_login():
 def route_guide():
     return flask.send_from_directory('','guide.html')
 
+@app.server.route('/guide_en')
+def route_guide():
+    return flask.send_from_directory('','guide_en.html')
+
 # create a logout route
 @app.server.route('/logout', methods=['POST'])
 def route_logout():
