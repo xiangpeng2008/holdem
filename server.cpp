@@ -146,7 +146,7 @@ class Holdem{
       std::ostringstream stream;
       if ( onTableId2index.find(usrname) == onTableId2index.end() ) { return stream.str(); }
       auto index = onTableId2index[usrname];
-      stream << cards_this_game[index*2] << ',' << cards_this_game[index*2+1];
+      stream << cards_this_game[index*2-2] << ',' << cards_this_game[index*2-1];
       if(which_round > 1) {
 	stream << ';' << cards_this_game[51] << ',' << cards_this_game[50] << ',' << cards_this_game[49];
       }
